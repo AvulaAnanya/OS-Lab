@@ -1,95 +1,67 @@
-#include <stdio.h>
-#define max 100
-int main()
-{
-  int n,AT[max],WT[max],ET[max],TAT[max],CT[max],PID[max],Priority[max],RT[max],min,maxCT=0,i,count,j,temp;
-  double avg_WT,avg_TAT,thrpt;
-  printf("Enter the number of processes\n");
-  scanf("%d",&n);
-  if(n>max)
-  {
-      printf("Limit exceeded");
-  }
-  else if(n<1)
-  {
-      printf("No process exist or negative input.");
-  }
-  else
-  {
-      for(i=0;i< n;i++)
-     {
-         printf("\nEnter details for process %d:\n",i+1);
-         printf("Arrival Time:");
-         scanf("%d",&AT[i]);
-         printf("Execution Time:");
-         scanf("%d",&ET[i]);
-         PID[i]=i+1;
-         printf("Priority:");
-         scanf("%d",&Priority[i]);
-     }
-     for(i=0;i< n-1;i++)
-     {
-         min=i;
-         for(j=i+1;j< n;j++)
-         {
-             if(AT[j]< AT[min])
-            {
-                min=j;
-            }
-         }
-         temp=AT[i];
-         AT[i]=AT[min];
-         AT[min]=temp;
-         temp=ET[i];
-         ET[i]=ET[min];
-         ET[min]=temp;
-         temp=PID[i];
-         PID[i]=PID[min];
-         PID[min]=temp;
-         temp=Priority[i];
-        Priority[i]=Priority[min];
-        Priority[min]=temp;
-      }
-      for(i=0;i< n;i++)
-      {
-          RT[i]=ET[i];
-      }
-      RT[n]=9999;
-      printf("Process\tPriority\tArrival Time\tBurst Time\tCompletion Time\tTAT\tWaiting Time\n");
-      count=0;
-      for(i=AT[0];count!=n;i++)
-      {
-          min=n;
-          for(j=0;j< n;j++)
-          {
-              if(AT[j]<=i && RT[j]>0 && Priority[j]>Priority[min])
-              {
-                  min=j;
-              }
-          }
-         RT[min]--;
-         if(RT[min]==0)
-        {
-            count++;
-            temp=i+1;
-            CT[min]=temp;
-            TAT[min]=CT[min]-AT[min];
-            WT[min]=TAT[min]-ET[min];
-            printf("P%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t%d\n",PID[min],Priority[min],AT[min],ET[min],CT[min],TAT[min],WT[min]);
-            if(temp>maxCT)
-            {
-                maxCT=temp;
-            }
-            avg_TAT=avg_TAT+TAT[min];
-            avg_WT=avg_WT+WT[min];
-        }
-      }
-      avg_TAT=(double)avg_TAT/n;
-      avg_WT=(double)avg_WT/n;
-      thrpt=(double)n/(maxCT-AT[0]);
-      printf("\nAvg.TAT=%.2f\n",avg_TAT);
-      printf("Avg.WT=%.2f\n",avg_WT);
-      printf("Throughput=%.2f",thrpt);
-  }
-  return 0;
-}
+def findall(arrival_time, t):
+    res = []
+    for i in range(len(arrival_time)):
+        if arrival_time[i]<=t:
+            res.append(i)
+    return res
+
+def find(p, indices):
+    ans = indices[0]
+    m = p[ans]
+    for i in indices[1:]:
+        if m>p[i]:
+            m = p[i]
+            ans = i
+    return ans
+
+n = int(input("Enter the number of processes: "))
+arrival_time = []
+burst_time = []
+priority = []
+for i in range(n):
+    arrival_time.append(int(input("Enter the arrival time of process " +str(i+1)+ ": ")))
+for i in range(n):
+    burst_time.append(int(input("Enter the burst time of process " +str(i+1)+ ": ")))
+for i in range(n):
+    priority.append(int(input("Enter the priority of process " +str(i+1)+ ": ")))
+#priority start
+indx = list(range(n))
+burst_time_res = burst_time[:]
+arrival_time_res = arrival_time[:]
+p = [0]*n
+turn_around = [0]*n
+wait_time = [0]*n
+exit_time = turn_around[:]
+t = min(arrival_time)
+cs = 0
+reali=None
+while arrival_time:
+    indices = findall(arrival_time, t)
+    ind = find(p, indices)
+    temp = indx[ind]
+    if temp != reali and reali != None:
+        cs+=1
+    reali = temp
+    for i in indices:
+        wait_time[indx[i]] += 1
+    wait_time[reali] -= 1
+    burst_time[ind] -= 1
+    t += 1
+    if burst_time[ind]==0:
+        turn_around[reali] = t-arrival_time[ind]
+        exit_time[reali] = t
+        arrival_time.pop(ind)
+        burst_time.pop(ind)
+        p.pop(ind)
+        indx.pop(ind)
+        
+#priority end
+print()
+print('Process ID\tPrority  \tArrival Time\tBurst Time\tExit Time\tturn Around Time\tWait time')
+for i in range(n):
+    print(i+1,'\t\t',priority[i],'\t\t',arrival_time_res[i],'\t\t',burst_time_res[i],'\t\t',exit_time[i],'\t\t',turn_around[i],'\t\t\t',wait_time[i])
+print()
+print('Average waiting time:', sum(wait_time)/n)
+print('Average turnaround time:', sum(turn_around)/n)
+print('Number of context switches:', cs)
+
